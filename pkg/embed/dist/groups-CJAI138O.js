@@ -1,0 +1,1 @@
+import{s as u}from"./request-Dw3XrAPh.js";function o(){return u({url:"/groups",method:"get"})}function p(r){return u({url:"/groups",method:"post",data:r})}function s(r,e){return u({url:`/groups/${r}`,method:"put",data:e})}function n(r){return u({url:`/groups/${r}`,method:"delete"})}export{p as c,n as d,o as g,s as u};
