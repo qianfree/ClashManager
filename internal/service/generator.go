@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"strings"
 
 	"clash-manager/internal/model"
 	"clash-manager/internal/repository"
@@ -257,8 +258,15 @@ func (s *ConfigService) GenerateConfig() ([]byte, error) {
 			// If not found, targetName remains r.Target (legacy fallback)
 		}
 
+		// Normalize payload for IP-CIDR type (ensure subnet mask is present)
+		payload := r.Payload
+		if r.Type == "IP-CIDR" && !strings.Contains(payload, "/") {
+			// Single IP without subnet mask, add /32
+			payload = payload + "/32"
+		}
+
 		// Format: TYPE,Payload,Target
-		line := r.Type + "," + r.Payload + "," + targetName
+		line := r.Type + "," + payload + "," + targetName
 		if r.NoResolve {
 			line += ",no-resolve"
 		}
