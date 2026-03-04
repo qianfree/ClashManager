@@ -1,16 +1,18 @@
 package main
 
 import (
-	"log"
-
+	"clash-manager/internal/api"
 	"flag"
 	"fmt"
+	"io/fs"
+	"log"
+	"net/http"
 	"os"
 
-	"clash-manager/internal/api"
 	"clash-manager/internal/config"
 	"clash-manager/internal/repository"
 
+	"clash-manager/web"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -37,10 +39,34 @@ func main() {
 
 	// 2. Setup Router
 	r := gin.Default()
+	// API接口
 	r.RedirectTrailingSlash = false // 禁用 trailing slash 重定向
 	r.RedirectFixedPath = false     // 禁用路径修正重定向
 	api.SetupRoutes(r)
-	SetupStaticRoutes(r) // 必须在 API 路由之后注册
+
+	// 静态文件处理
+	subFS, _ := fs.Sub(web.StaticFiles, "dist")
+	staticHandler := http.FS(subFS)
+	r.NoRoute(func(c *gin.Context) {
+		path := c.Request.URL.Path
+
+		// 尝试在嵌入的文件系统中打开该文件
+		f, err := subFS.Open(path[1:]) // 移除开头的 "/"
+		if err != nil {
+			// 文件不存在，返回 index.html (交给前端路由处理)
+			indexFile, _ := subFS.Open("index.html")
+			defer indexFile.Close()
+
+			// 获取文件信息以读取内容
+			stat, _ := indexFile.Stat()
+			c.DataFromReader(http.StatusOK, stat.Size(), "text/html; charset=utf-8", indexFile, nil)
+			return
+		}
+		defer f.Close()
+
+		// 如果文件存在，直接提供服务
+		http.FileServer(staticHandler).ServeHTTP(c.Writer, c.Request)
+	})
 
 	// 3. Start Server
 	log.Printf("Server starting on %s...", serverPort)
