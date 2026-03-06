@@ -92,3 +92,21 @@ type SubscriptionLog struct {
 func (SubscriptionLog) TableName() string {
 	return "subscription_logs"
 }
+
+// SubscriptionSource represents a third-party subscription source
+type SubscriptionSource struct {
+	gorm.Model
+	Name           string     `gorm:"uniqueIndex" json:"name"`          // 订阅源名称
+	URL            string     `json:"url"`                              // 订阅链接
+	Enabled        bool       `gorm:"default:true" json:"enabled"`      // 是否启用
+	UpdateInterval int        `gorm:"default:24" json:"updateInterval"` // 更新间隔(小时)
+	LastSync       *time.Time `json:"lastSync"`                         // 最后同步时间
+	NodeTag        string     `json:"nodeTag"`                          // 导入节点的标签
+	SyncMode       string     `gorm:"default:append" json:"syncMode"`   // 同步模式: append, replace, smart
+	Error          string     `json:"error"`                            // 最后一次错误信息
+}
+
+// TableName specifies the table name for SubscriptionSource
+func (SubscriptionSource) TableName() string {
+	return "subscription_sources"
+}

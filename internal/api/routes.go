@@ -16,6 +16,7 @@ func SetupRoutes(r *gin.Engine) {
 	settingsHandler := handlers.NewSettingsHandler()
 	authHandler := handlers.NewAuthHandler() // Add auth handler
 	subscriptionHandler := handlers.NewSubscriptionHandler()
+	sourceHandler := handlers.NewSubscriptionSourceHandler()
 
 	// Public Auth Routes
 	auth := r.Group("/api/auth")
@@ -66,6 +67,15 @@ func SetupRoutes(r *gin.Engine) {
 		api.GET("/subscription/stats", subscriptionHandler.GetSubscriptionStats)
 		api.DELETE("/subscription/logs/old", subscriptionHandler.DeleteOldLogs)
 		api.GET("/subscription/online", subscriptionHandler.GetOnlineClients)
+
+		// Subscription source routes
+		api.GET("/sources", sourceHandler.ListSources)
+		api.GET("/sources/:id", sourceHandler.GetSource)
+		api.POST("/sources", sourceHandler.CreateSource)
+		api.PUT("/sources/:id", sourceHandler.UpdateSource)
+		api.DELETE("/sources/:id", sourceHandler.DeleteSource)
+		api.POST("/sources/:id/sync", sourceHandler.SyncSource)
+		api.POST("/sources/test", sourceHandler.TestSource)
 	}
 
 	// Subscription route (public, requires token)

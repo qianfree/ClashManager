@@ -41,6 +41,10 @@
             <el-icon><Document /></el-icon>
             <span>订阅日志</span>
           </el-menu-item>
+          <el-menu-item index="/sources">
+            <el-icon><Download /></el-icon>
+            <span>订阅源管理</span>
+          </el-menu-item>
           <el-menu-item index="/settings">
             <el-icon><Setting /></el-icon>
             <span>系统设置</span>
@@ -114,7 +118,8 @@ import {
   Lock,
   SwitchButton,
   User,
-  ArrowDown
+  ArrowDown,
+  Download
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 
@@ -135,6 +140,7 @@ const pageTitleMap = {
   '/groups': '代理组管理',
   '/subscription': '订阅配置',
   '/subscription-logs': '订阅日志',
+  '/sources': '订阅源管理',
   '/settings': '系统设置',
   '/password': '修改密码'
 }

@@ -27,6 +27,7 @@ func InitDB(dsn string) error {
 		&model.GlobalSetting{},
 		&model.User{},
 		&model.SubscriptionLog{},
+		&model.SubscriptionSource{},
 	)
 }
 
