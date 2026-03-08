@@ -12,26 +12,26 @@
       </template>
 
       <el-table :data="groups" stripe style="width: 100%">
-        <el-table-column prop="ID" label="ID" min-width="60" />
-        <el-table-column prop="Name" label="名称" min-width="150" />
-        <el-table-column prop="Type" label="类型" min-width="100">
+        <el-table-column prop="id" label="ID" min-width="60" />
+        <el-table-column prop="name" label="名称" min-width="150" />
+        <el-table-column prop="type" label="类型" min-width="100">
           <template #default="{ row }">
-            <el-tag :type="row.Type === 'select' ? 'primary' : 'success'">
-              {{ row.Type }}
+            <el-tag :type="row.type === 'select' ? 'primary' : 'success'">
+              {{ row.type }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="Source" label="来源" min-width="100">
+        <el-table-column prop="source" label="来源" min-width="100">
           <template #default="{ row }">
-            <el-tag :type="getSourceType(row.Source)" size="small">
-              {{ getSourceText(row.Source) }}
+            <el-tag :type="getSourceType(row.source)" size="small">
+              {{ getSourceText(row.source) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="ProxyNodes" label="包含节点" min-width="280">
+        <el-table-column prop="proxy_nodes" label="包含节点" min-width="280">
           <template #default="{ row }">
-            <el-tag v-for="proxy in displayNodes(row).slice(0, 5)" :key="proxy.ID || proxy" size="small" style="margin-right: 5px;">
-              {{ proxy.Name || proxy }}
+            <el-tag v-for="proxy in displayNodes(row).slice(0, 5)" :key="proxy.id || proxy" size="small" style="margin-right: 5px;">
+              {{ proxy.name || proxy }}
             </el-tag>
             <span v-if="displayNodes(row).length > 5" style="color: #909399; font-size: 12px;">
               ...等{{ displayNodes(row).length }}个
@@ -39,8 +39,8 @@
             <span v-if="displayNodes(row).length === 0" style="color: #909399;">无</span>
           </template>
         </el-table-column>
-        <el-table-column prop="URL" label="测试URL" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="Interval" label="间隔(秒)" min-width="100" />
+        <el-table-column prop="url" label="测试URL" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="interval" label="间隔(秒)" min-width="100" />
         <el-table-column label="操作" min-width="150" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
@@ -68,7 +68,7 @@
             v-model="groupForm.ProxyIDs"
             :data="transferData"
             :props="{
-              key: 'ID',
+              key: 'id',
               label: 'label'
             }"
             filterable
@@ -118,8 +118,8 @@ const groupForm = ref({
 // 穿梭框数据源
 const transferData = computed(() => {
   return nodes.value.map(node => ({
-    ID: node.ID,
-    label: node.Name,
+    id: node.id,
+    label: node.name,
     disabled: false
   }))
 })
@@ -130,16 +130,16 @@ const loadGroups = async () => {
 
 // 兼容新旧数据格式显示节点
 const displayNodes = (row) => {
-  // 新格式：使用 ProxyNodes 数组
-  if (row.ProxyNodes && row.ProxyNodes.length > 0) {
-    return row.ProxyNodes
+  // 新格式：使用 proxy_nodes 数组
+  if (row.proxy_nodes && row.proxy_nodes.length > 0) {
+    return row.proxy_nodes
   }
   // 旧格式：解析 Proxies JSON 字符串
-  if (row.Proxies) {
+  if (row.proxies) {
     try {
-      const proxies = JSON.parse(row.Proxies)
+      const proxies = JSON.parse(row.proxies)
       if (Array.isArray(proxies)) {
-        return proxies.map(p => ({ ID: null, Name: p }))
+        return proxies.map(p => ({ id: null, name: p }))
       }
     } catch {
       return []
@@ -184,23 +184,23 @@ const showCreateDialog = async () => {
 
 const handleEdit = async (row) => {
   isEdit.value = true
-  editId.value = row.ID
-  // Parse ProxyIDs from JSON if needed
+  editId.value = row.id
+  // Parse proxy_ids from JSON if needed
   let proxyIDs = []
-  if (row.ProxyIDs) {
+  if (row.proxy_ids) {
     try {
-      const parsed = JSON.parse(row.ProxyIDs)
+      const parsed = JSON.parse(row.proxy_ids)
       proxyIDs = Array.isArray(parsed) ? parsed : []
     } catch {
       proxyIDs = []
     }
   }
   groupForm.value = {
-    Name: row.Name,
-    Type: row.Type,
+    Name: row.name,
+    Type: row.type,
     ProxyIDs: proxyIDs,
-    URL: row.URL || 'http://www.gstatic.com/generate_204',
-    Interval: row.Interval || 300
+    URL: row.url || 'http://www.gstatic.com/generate_204',
+    Interval: row.interval || 300
   }
   await loadNodes()
   formDialogVisible.value = true
@@ -238,7 +238,7 @@ const handleSave = async () => {
 
 const handleDelete = async (row) => {
   await ElMessageBox.confirm('确定删除该代理组吗？', '提示', { type: 'warning' })
-  await deleteGroup(row.ID)
+  await deleteGroup(row.id)
   ElMessage.success('删除成功')
   loadGroups()
 }

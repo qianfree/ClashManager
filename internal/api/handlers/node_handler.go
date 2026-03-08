@@ -94,3 +94,30 @@ func (h *NodeHandler) ImportNode(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, node)
 }
+
+func (h *NodeHandler) ExportNode(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
+
+	node, err := h.Repo.FindByID(uint(id))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Node not found"})
+		return
+	}
+
+	link, err := service.ExportLink(node)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to export node: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"link": link,
+		"name": node.Name,
+		"type": node.Type,
+	})
+}

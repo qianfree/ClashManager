@@ -3,42 +3,12 @@ package repository
 import (
 	"clash-manager/internal/model"
 	"encoding/json"
-	"time"
 )
 
 // GroupWithNodes represents a proxy group with resolved node names
 type GroupWithNodes struct {
 	model.ProxyGroupModel
-	ProxyNodes []model.ProxyNode `json:"ProxyNodes"`
-}
-
-// MarshalJSON implements custom JSON marshaling for GroupWithNodes
-func (g GroupWithNodes) MarshalJSON() ([]byte, error) {
-	return json.Marshal(struct {
-		ID         uint              `json:"ID"`
-		CreatedAt  time.Time         `json:"CreatedAt"`
-		UpdatedAt  time.Time         `json:"UpdatedAt"`
-		Name       string            `json:"Name"`
-		Type       string            `json:"Type"`
-		ProxyIDs   string            `json:"ProxyIDs"`
-		Use        string            `json:"Use"`
-		URL        string            `json:"URL"`
-		Interval   int               `json:"Interval"`
-		Source     string            `json:"Source"`
-		ProxyNodes []model.ProxyNode `json:"ProxyNodes"`
-	}{
-		ID:         g.ID,
-		CreatedAt:  g.CreatedAt,
-		UpdatedAt:  g.UpdatedAt,
-		Name:       g.Name,
-		Type:       g.Type,
-		ProxyIDs:   g.ProxyIDs,
-		Use:        g.Use,
-		URL:        g.URL,
-		Interval:   g.Interval,
-		Source:     g.Source,
-		ProxyNodes: g.ProxyNodes,
-	})
+	ProxyNodes []model.ProxyNode `json:"proxy_nodes"`
 }
 
 type GroupRepository struct{}

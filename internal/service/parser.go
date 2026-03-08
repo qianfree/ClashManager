@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -214,4 +215,168 @@ func getString(m map[string]interface{}, key string) string {
 		return v
 	}
 	return ""
+}
+
+// ExportLink converts a Node model to a shareable link
+func ExportLink(node *model.Node) (string, error) {
+	switch node.Type {
+	case "ss", "shadowsocks":
+		return exportSS(node)
+	case "vmess":
+		return exportVmess(node)
+	case "trojan":
+		return exportTrojan(node)
+	case "vless":
+		return exportVless(node)
+	case "hysteria2", "hysteria":
+		return exportHysteria2(node)
+	default:
+		return "", errors.New("unsupported node type: " + node.Type)
+	}
+}
+
+func exportSS(node *model.Node) (string, error) {
+	// Format: ss://base64(method:password@server:port)#name
+	if node.Cipher == "" || node.Password == "" {
+		return "", errors.New("missing required SS fields")
+	}
+
+	userInfo := fmt.Sprintf("%s:%s", node.Cipher, node.Password)
+	serverPart := fmt.Sprintf("%s:%d", node.Server, node.Port)
+	full := fmt.Sprintf("%s@%s", userInfo, serverPart)
+
+	encoded := base64.RawURLEncoding.EncodeToString([]byte(full))
+	link := fmt.Sprintf("ss://%s", encoded)
+
+	if node.Name != "" {
+		link += "#" + url.QueryEscape(node.Name)
+	}
+
+	return link, nil
+}
+
+func exportVmess(node *model.Node) (string, error) {
+	// vmess://base64(json)
+	if node.UUID == "" {
+		return "", errors.New("missing UUID for VMess")
+	}
+
+	// Parse extra config for alterId
+	alterId := 0
+	if node.ExtraConfig != "" {
+		var extra map[string]interface{}
+		if err := json.Unmarshal([]byte(node.ExtraConfig), &extra); err == nil {
+			if v, ok := extra["alterId"]; ok {
+				switch val := v.(type) {
+				case float64:
+					alterId = int(val)
+				case int:
+					alterId = val
+				case string:
+					alterId, _ = strconv.Atoi(val)
+				}
+			}
+		}
+	}
+
+	vMap := map[string]interface{}{
+		"v":    "2",
+		"ps":   node.Name,
+		"add":  node.Server,
+		"port": node.Port,
+		"id":   node.UUID,
+		"aid":  alterId,
+		"net":  node.Network,
+		"type": "none",
+		"host": node.Host,
+		"path": node.Path,
+		"tls":  "",
+	}
+
+	if node.TLS {
+		vMap["tls"] = "tls"
+	}
+
+	jsonBytes, _ := json.Marshal(vMap)
+	encoded := base64.StdEncoding.EncodeToString(jsonBytes)
+	return fmt.Sprintf("vmess://%s", encoded), nil
+}
+
+func exportTrojan(node *model.Node) (string, error) {
+	// trojan://password@host:port#name
+	if node.Password == "" {
+		return "", errors.New("missing password for Trojan")
+	}
+
+	link := fmt.Sprintf("trojan://%s@%s:%d", node.Password, node.Server, node.Port)
+
+	// Add query parameters for SNI
+	if node.Host != "" {
+		link += fmt.Sprintf("?sni=%s", url.QueryEscape(node.Host))
+	}
+
+	if node.Name != "" {
+		link += "#" + url.QueryEscape(node.Name)
+	}
+
+	return link, nil
+}
+
+func exportVless(node *model.Node) (string, error) {
+	// vless://uuid@server:port?params#name
+	if node.UUID == "" {
+		return "", errors.New("missing UUID for VLESS")
+	}
+
+	params := url.Values{}
+	params.Set("type", node.Network)
+	if node.Network == "ws" || node.Network == "grpc" {
+		if node.Path != "" {
+			params.Set("path", node.Path)
+		}
+		if node.Host != "" {
+			params.Set("host", node.Host)
+		}
+	}
+	if node.TLS {
+		params.Set("security", "tls")
+		if node.Host != "" {
+			params.Set("sni", node.Host)
+		}
+	}
+
+	link := fmt.Sprintf("vless://%s@%s:%d?%s", node.UUID, node.Server, node.Port, params.Encode())
+
+	if node.Name != "" {
+		link += "#" + url.QueryEscape(node.Name)
+	}
+
+	return link, nil
+}
+
+func exportHysteria2(node *model.Node) (string, error) {
+	// hysteria2://password@server:port?params#name
+	password := node.Password
+	if password == "" && node.UUID != "" {
+		password = node.UUID
+	}
+	if password == "" {
+		return "", errors.New("missing password for Hysteria2")
+	}
+
+	params := url.Values{}
+	if node.Host != "" {
+		params.Set("sni", node.Host)
+	}
+
+	link := fmt.Sprintf("hysteria2://%s@%s:%d", url.QueryEscape(password), node.Server, node.Port)
+	if len(params) > 0 {
+		link += "?" + params.Encode()
+	}
+
+	if node.Name != "" {
+		link += "#" + url.QueryEscape(node.Name)
+	}
+
+	return link, nil
 }

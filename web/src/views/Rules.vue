@@ -79,28 +79,28 @@
             <el-option-group label="代理节点" v-if="nodes.length > 0">
               <el-option
                 v-for="node in nodes"
-                :key="'node-' + node.ID"
-                :label="node.Name"
-                :value="'node:' + node.Name"
+                :key="'node-' + node.id"
+                :label="node.name"
+                :value="'node:' + node.name"
               >
                 <div class="option-content-flex">
                   <el-icon><Connection /></el-icon>
-                  <span class="option-name">{{ node.Name }}</span>
-                  <el-tag size="small" class="option-type-tag">{{ node.Type }}</el-tag>
+                  <span class="option-name">{{ node.name }}</span>
+                  <el-tag size="small" class="option-type-tag">{{ node.type }}</el-tag>
                 </div>
               </el-option>
             </el-option-group>
             <el-option-group label="代理组" v-if="groups.length > 0">
               <el-option
                 v-for="group in groups"
-                :key="'group-' + group.ID"
-                :label="group.Name"
-                :value="'group:' + group.Name"
+                :key="'group-' + group.id"
+                :label="group.name"
+                :value="'group:' + group.name"
               >
                 <div class="option-content-flex">
                   <el-icon><Grid /></el-icon>
-                  <span class="option-name">{{ group.Name }}</span>
-                  <el-tag size="small" class="option-type-tag">{{ group.Type }}</el-tag>
+                  <span class="option-name">{{ group.name }}</span>
+                  <el-tag size="small" class="option-type-tag">{{ group.type }}</el-tag>
                 </div>
               </el-option>
             </el-option-group>
@@ -131,61 +131,61 @@
       </div>
 
       <el-table :data="displayRules" stripe class="rules-table" v-loading="loading">
-        <el-table-column prop="ID" label="ID" min-width="60" />
-        <el-table-column prop="Priority" label="序号" min-width="70">
+        <el-table-column prop="id" label="ID" min-width="60" />
+        <el-table-column prop="priority" label="序号" min-width="70">
           <template #default="{ row }">
-            <span class="priority-badge">{{ row.Priority ?? 0 }}</span>
+            <span class="priority-badge">{{ row.priority ?? 0 }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="Type" label="规则类型" min-width="140">
+        <el-table-column prop="type" label="规则类型" min-width="140">
           <template #default="{ row }">
-            <el-tag :type="getTypeTagType(row.Type)" size="small">{{ row.Type }}</el-tag>
+            <el-tag :type="getTypeTagType(row.type)" size="small">{{ row.type }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="Payload" label="匹配内容" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="Target" label="目标" min-width="140">
+        <el-table-column prop="payload" label="匹配内容" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="target" label="目标" min-width="140">
           <template #default="{ row }">
             <div class="target-cell">
               <!-- 固定出口 builtin -->
-              <div v-if="row.TargetType === 'builtin' && row.Target === 'PROXY'" class="target-tag proxy">
+              <div v-if="row.target_type === 'builtin' && row.target === 'PROXY'" class="target-tag proxy">
                 <span>PROXY</span>
               </div>
-              <div v-else-if="row.TargetType === 'builtin' && row.Target === 'DIRECT'" class="target-tag direct">
+              <div v-else-if="row.target_type === 'builtin' && row.target === 'DIRECT'" class="target-tag direct">
                 <span>DIRECT</span>
               </div>
-              <div v-else-if="row.TargetType === 'builtin' && row.Target === 'REJECT'" class="target-tag reject">
+              <div v-else-if="row.target_type === 'builtin' && row.target === 'REJECT'" class="target-tag reject">
                 <span>REJECT</span>
               </div>
-              <div v-else-if="row.TargetType === 'builtin'" class="target-tag builtin">
-                <span>{{ row.Target }}</span>
+              <div v-else-if="row.target_type === 'builtin'" class="target-tag builtin">
+                <span>{{ row.target }}</span>
               </div>
               <!-- 代理节点 -->
-              <div v-else-if="row.TargetType === 'node'" class="target-tag node">
+              <div v-else-if="row.target_type === 'node'" class="target-tag node">
                 <el-icon><Connection /></el-icon>
                 <span>{{ getTargetDisplayName(row) }}</span>
               </div>
               <!-- 代理组 -->
-              <div v-else-if="row.TargetType === 'group'" class="target-tag group">
+              <div v-else-if="row.target_type === 'group'" class="target-tag group">
                 <el-icon><Grid /></el-icon>
                 <span>{{ getTargetDisplayName(row) }}</span>
               </div>
               <!-- 其他（兼容旧数据） -->
               <div v-else class="target-tag builtin">
-                <span>{{ row.Target }}</span>
+                <span>{{ row.target }}</span>
               </div>
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="Tag" label="标签" min-width="90">
+        <el-table-column prop="tag" label="标签" min-width="90">
           <template #default="{ row }">
-            <el-tag v-if="row.Tag" size="small" class="rule-tag">{{ row.Tag }}</el-tag>
+            <el-tag v-if="row.tag" size="small" class="rule-tag">{{ row.tag }}</el-tag>
             <span v-else class="text-muted">-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="Remark" label="备注" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="CreatedAt" label="创建时间" min-width="160">
+        <el-table-column prop="remark" label="备注" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="created_at" label="创建时间" min-width="160">
           <template #default="{ row }">
-            {{ formatDateTime(row.CreatedAt) }}
+            {{ formatDateTime(row.created_at) }}
           </template>
         </el-table-column>
         <el-table-column label="操作" min-width="150" fixed="right">
@@ -255,28 +255,28 @@
             <el-option-group label="代理节点">
               <el-option
                 v-for="node in nodes"
-                :key="node.ID"
-                :label="node.Name"
-                :value="`node:${node.ID}:${node.Name}`"
+                :key="node.id"
+                :label="node.name"
+                :value="`node:${node.id}:${node.name}`"
               >
                 <div class="option-content-flex">
                   <el-icon><Connection /></el-icon>
-                  <span class="option-name">{{ node.Name }}</span>
-                  <el-tag size="small" class="option-type-tag">{{ node.Type }}</el-tag>
+                  <span class="option-name">{{ node.name }}</span>
+                  <el-tag size="small" class="option-type-tag">{{ node.type }}</el-tag>
                 </div>
               </el-option>
             </el-option-group>
             <el-option-group label="代理组">
               <el-option
                 v-for="group in groups"
-                :key="group.ID"
-                :label="group.Name"
-                :value="`group:${group.ID}:${group.Name}`"
+                :key="group.id"
+                :label="group.name"
+                :value="`group:${group.id}:${group.name}`"
               >
                 <div class="option-content-flex">
                   <el-icon><Grid /></el-icon>
-                  <span class="option-name">{{ group.Name }}</span>
-                  <el-tag size="small" class="option-type-tag">{{ group.Type }}</el-tag>
+                  <span class="option-name">{{ group.name }}</span>
+                  <el-tag size="small" class="option-type-tag">{{ group.type }}</el-tag>
                 </div>
               </el-option>
             </el-option-group>
@@ -387,18 +387,18 @@ const ruleForm = ref({
 
 // 解析目标显示名称（从ID转换为名称）
 const getTargetDisplayName = (row) => {
-  // Handle builtin targets (including empty TargetType for backward compatibility)
-  if (!row.TargetType || row.TargetType === 'builtin') {
-    return row.Target
+  // Handle builtin targets (including empty target_type for backward compatibility)
+  if (!row.target_type || row.target_type === 'builtin') {
+    return row.target
   }
-  if (row.TargetType === 'node') {
-    const node = nodes.value.find(n => String(n.ID) === String(row.Target))
-    return node ? node.Name : row.Target
-  } else if (row.TargetType === 'group') {
-    const group = groups.value.find(g => String(g.ID) === String(row.Target))
-    return group ? group.Name : row.Target
+  if (row.target_type === 'node') {
+    const node = nodes.value.find(n => String(n.id) === String(row.target_id))
+    return node ? node.name : row.target
+  } else if (row.target_type === 'group') {
+    const group = groups.value.find(g => String(g.id) === String(row.target_id))
+    return group ? group.name : row.target
   }
-  return row.Target
+  return row.target
 }
 
 // 搜索和过滤
@@ -530,31 +530,31 @@ const showCreateDialog = async () => {
 
 const handleEdit = async (row) => {
   isEdit.value = true
-  editId.value = row.ID
+  editId.value = row.id
   // Build Target value for select dropdown
-  let targetValue = row.Target || 'PROXY'
-  if (row.TargetType === 'node') {
+  let targetValue = row.target || 'PROXY'
+  if (row.target_type === 'node') {
     // Find node by ID to get the name
-    const node = nodes.value.find(n => String(n.ID) === String(row.Target))
+    const node = nodes.value.find(n => String(n.id) === String(row.target_id))
     if (node) {
-      targetValue = `node:${node.ID}:${node.Name}`
+      targetValue = `node:${node.id}:${node.name}`
     }
-  } else if (row.TargetType === 'group') {
+  } else if (row.target_type === 'group') {
     // Find group by ID to get the name
-    const group = groups.value.find(g => String(g.ID) === String(row.Target))
+    const group = groups.value.find(g => String(g.id) === String(row.target_id))
     if (group) {
-      targetValue = `group:${group.ID}:${group.Name}`
+      targetValue = `group:${group.id}:${group.name}`
     }
   }
   ruleForm.value = {
-    Type: row.Type,
-    Payload: row.Payload,
+    Type: row.type,
+    Payload: row.payload,
     Target: targetValue,
-    TargetType: row.TargetType || 'builtin', // Default to builtin for backward compatibility
-    Priority: row.Priority ?? 0,
-    NoResolve: row.NoResolve,
-    Tag: row.Tag || '',
-    Remark: row.Remark || ''
+    TargetType: row.target_type || 'builtin', // Default to builtin for backward compatibility
+    Priority: row.priority ?? 0,
+    NoResolve: row.no_resolve,
+    Tag: row.tag || '',
+    Remark: row.remark || ''
   }
   await Promise.all([loadGroups(), loadNodes()])
   formDialogVisible.value = true
@@ -585,15 +585,16 @@ const handleSave = async () => {
   }
   // For builtin type, keep the original value
 
+  // 转换为后端期望的 snake_case 格式
   const data = {
-    Type: ruleForm.value.Type,
-    Payload: ruleForm.value.Payload,
-    Target: targetValue,
-    TargetType: targetType,
-    Priority: ruleForm.value.Priority ?? 0,
-    NoResolve: ruleForm.value.NoResolve,
-    Tag: ruleForm.value.Tag ? ruleForm.value.Tag.trim() : '',
-    Remark: ruleForm.value.Remark || ''
+    type: ruleForm.value.Type,
+    payload: ruleForm.value.Payload,
+    target: targetValue,
+    target_type: targetType,
+    priority: ruleForm.value.Priority ?? 0,
+    no_resolve: ruleForm.value.NoResolve,
+    tag: ruleForm.value.Tag ? ruleForm.value.Tag.trim() : '',
+    remark: ruleForm.value.Remark || ''
   }
   if (isEdit.value) {
     await updateRule(editId.value, data)
@@ -609,7 +610,7 @@ const handleSave = async () => {
 
 const handleDelete = async (row) => {
   await ElMessageBox.confirm('确定删除该规则吗？', '提示', { type: 'warning' })
-  await deleteRule(row.ID)
+  await deleteRule(row.id)
   ElMessage.success('删除成功')
   loadRules()
 }

@@ -37,3 +37,10 @@ export function importNode(link) {
     data: { link }
   })
 }
+
+export function exportNode(id) {
+  return request({
+    url: `/nodes/${id}/export`,
+    method: 'get'
+  })
+}

@@ -15,33 +15,34 @@
       </template>
 
       <el-table :data="nodes" stripe style="width: 100%">
-        <el-table-column prop="ID" label="ID" min-width="60" />
-        <el-table-column prop="Name" label="名称" min-width="120" />
-        <el-table-column prop="Type" label="类型" min-width="100">
+        <el-table-column prop="id" label="ID" min-width="60" />
+        <el-table-column prop="name" label="名称" min-width="120" />
+        <el-table-column prop="type" label="类型" min-width="100">
           <template #default="{ row }">
-            <el-tag>{{ getTypeLabel(row.Type) }}</el-tag>
+            <el-tag>{{ getTypeLabel(row.type) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="Server" label="服务器" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="Port" label="端口" min-width="80" />
-        <el-table-column prop="Network" label="传输" min-width="80" />
+        <el-table-column prop="server" label="服务器" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="port" label="端口" min-width="80" />
+        <el-table-column prop="network" label="传输" min-width="80" />
         <el-table-column label="来源" min-width="120">
           <template #default="{ row }">
-            <el-tag v-if="row.Source === 'subscription'" type="warning" size="small">
-              {{ row.SourceName || '订阅' }}
+            <el-tag v-if="row.source === 'subscription'" type="warning" size="small">
+              {{ row.sourceName || '订阅' }}
             </el-tag>
             <el-tag v-else type="info" size="small">手动</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="状态" min-width="80">
           <template #default="{ row }">
-            <el-tag :type="row.TLS ? 'success' : 'info'" size="small">
-              {{ row.TLS ? 'TLS' : '普通' }}
+            <el-tag :type="row.tls ? 'success' : 'info'" size="small">
+              {{ row.tls ? 'TLS' : '普通' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" min-width="150" fixed="right">
+        <el-table-column label="操作" min-width="200" fixed="right">
           <template #default="{ row }">
+            <el-button type="success" link @click="handleExport(row)">导出</el-button>
             <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
             <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
           </template>
@@ -312,7 +313,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Upload } from '@element-plus/icons-vue'
-import { getNodes, createNode, updateNode, deleteNode, importNode } from '@/api/nodes'
+import { getNodes, createNode, updateNode, deleteNode, importNode, exportNode } from '@/api/nodes'
 
 const nodes = ref([])
 const importDialogVisible = ref(false)
@@ -403,8 +404,26 @@ const handleTabChange = (tabName) => {
 
 const handleEdit = (row) => {
   isEdit.value = true
-  activeTab.value = row.Type
-  nodeForm.value = { ...row }
+  activeTab.value = row.type
+  // 将后端返回的蛇形命名字段转换为表单的驼峰命名
+  nodeForm.value = {
+    ID: row.id,
+    Name: row.name,
+    Type: row.type,
+    Server: row.server,
+    Port: row.port,
+    UUID: row.uuid || '',
+    Password: row.password || '',
+    Cipher: row.cipher || '',
+    Network: row.network || '',
+    Path: row.path || '',
+    Host: row.host || '',
+    TLS: row.tls || false,
+    SkipCert: row.skipCert || false,
+    UDP: row.udp || false,
+    ALPN: row.alpn || '',
+    ExtraConfig: row.extraConfig || ''
+  }
   formDialogVisible.value = true
 }
 
@@ -428,11 +447,30 @@ const handleSave = async () => {
     }
   }
 
+  // 转换为后端期望的 snake_case 格式
+  const data = {
+    name: nodeForm.value.Name,
+    type: nodeForm.value.Type,
+    server: nodeForm.value.Server,
+    port: nodeForm.value.Port,
+    uuid: nodeForm.value.UUID || '',
+    password: nodeForm.value.Password || '',
+    cipher: nodeForm.value.Cipher || '',
+    network: nodeForm.value.Network || '',
+    path: nodeForm.value.Path || '',
+    host: nodeForm.value.Host || '',
+    tls: nodeForm.value.TLS,
+    skip_cert: nodeForm.value.SkipCert,
+    udp: nodeForm.value.UDP,
+    alpn: nodeForm.value.ALPN || '',
+    extra_config: nodeForm.value.ExtraConfig || ''
+  }
+
   if (isEdit.value) {
-    await updateNode(nodeForm.value.ID, nodeForm.value)
+    await updateNode(nodeForm.value.ID, data)
     ElMessage.success('更新成功')
   } else {
-    await createNode(nodeForm.value)
+    await createNode(data)
     ElMessage.success('创建成功')
   }
   formDialogVisible.value = false
@@ -441,9 +479,46 @@ const handleSave = async () => {
 
 const handleDelete = async (row) => {
   await ElMessageBox.confirm('确定删除该节点吗？', '提示', { type: 'warning' })
-  await deleteNode(row.ID)
+  await deleteNode(row.id)
   ElMessage.success('删除成功')
   loadNodes()
+}
+
+const handleExport = async (row) => {
+  try {
+    const result = await exportNode(row.id)
+    const link = result.link
+
+    // 复制到剪贴板
+    await navigator.clipboard.writeText(link)
+    ElMessage.success('节点分享链接已复制到剪贴板')
+
+    // 可选：同时显示链接让用户确认
+    console.log('导出的节点链接:', link)
+  } catch (error) {
+    // 如果剪贴板复制失败，显示链接让用户手动复制
+    try {
+      const result = await exportNode(row.id)
+      const link = result.link
+
+      ElMessageBox.alert(
+        link,
+        '节点分享链接',
+        {
+          confirmButtonText: '确定',
+          type: 'success',
+          inputType: 'textarea',
+          showInput: false,
+          dangerouslyUseHTMLString: false,
+          message: link,
+          customClass: 'export-link-dialog'
+        }
+      ).catch(() => {})
+    } catch (err) {
+      console.error('导出失败:', err)
+      ElMessage.error('导出失败：' + (err.response?.data?.error || err.message))
+    }
+  }
 }
 
 onMounted(() => {
@@ -515,5 +590,19 @@ onMounted(() => {
 
 :deep(.el-tab-pane) {
   background: #fff;
+}
+
+/* 导出链接对话框样式 */
+:deep(.export-link-dialog .el-message-box__content) {
+  padding: 10px 20px;
+}
+
+:deep(.export-link-dialog .el-message-box__message) {
+  word-break: break-all;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  max-height: 200px;
+  overflow-y: auto;
 }
 </style>

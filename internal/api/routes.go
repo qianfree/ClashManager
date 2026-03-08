@@ -39,6 +39,7 @@ func SetupRoutes(r *gin.Engine) {
 		api.POST("/nodes/import", nodeHandler.ImportNode)
 		api.PUT("/nodes/:id", nodeHandler.UpdateNode)
 		api.DELETE("/nodes/:id", nodeHandler.DeleteNode)
+		api.GET("/nodes/:id/export", nodeHandler.ExportNode)
 
 		// Rule routes
 		api.GET("/rules", ruleHandler.ListRules)

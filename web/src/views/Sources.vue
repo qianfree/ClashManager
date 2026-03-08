@@ -16,41 +16,41 @@
       </template>
 
       <el-table :data="sources" stripe style="width: 100%">
-        <el-table-column prop="ID" label="ID" width="60" />
-        <el-table-column prop="Name" label="名称" min-width="150" />
-        <el-table-column prop="URL" label="订阅链接" min-width="250" show-overflow-tooltip />
+        <el-table-column prop="id" label="ID" width="60" />
+        <el-table-column prop="name" label="名称" min-width="150" />
+        <el-table-column prop="url" label="订阅链接" min-width="250" show-overflow-tooltip />
         <el-table-column label="状态" width="80">
           <template #default="{ row }">
-            <el-switch v-model="row.Enabled" @change="handleToggleEnabled(row)" />
+            <el-switch v-model="row.enabled" @change="handleToggleEnabled(row)" />
           </template>
         </el-table-column>
         <el-table-column label="同步模式" width="120">
           <template #default="{ row }">
-            <el-tag :type="getSyncModeType(row.SyncMode)">
-              {{ getSyncModeText(row.SyncMode) }}
+            <el-tag :type="getSyncModeType(row.sync_mode)">
+              {{ getSyncModeText(row.sync_mode) }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="更新间隔" width="100">
           <template #default="{ row }">
-            {{ row.UpdateInterval }}小时
+            {{ row.update_interval }}小时
           </template>
         </el-table-column>
         <el-table-column label="最后同步" width="160">
           <template #default="{ row }">
-            <span v-if="row.LastSync">{{ formatTime(row.LastSync) }}</span>
+            <span v-if="row.last_sync">{{ formatTime(row.last_sync) }}</span>
             <span v-else style="color: #909399;">未同步</span>
           </template>
         </el-table-column>
         <el-table-column label="节点标签" width="100">
           <template #default="{ row }">
-            <el-tag v-if="row.NodeTag" size="small" type="info">{{ row.NodeTag }}</el-tag>
+            <el-tag v-if="row.node_tag" size="small" type="info">{{ row.node_tag }}</el-tag>
             <span v-else style="color: #909399;">-</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" link @click="handleSync(row)" :loading="syncingId === row.ID">
+            <el-button type="primary" link @click="handleSync(row)" :loading="syncingId === row.id">
               同步
             </el-button>
             <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
@@ -63,20 +63,20 @@
     <!-- 添加/编辑订阅源对话框 -->
     <el-dialog v-model="formDialogVisible" :title="isEdit ? '编辑订阅源' : '添加订阅源'" width="500px">
       <el-form :model="sourceForm" label-width="100px" :rules="formRules" ref="sourceFormRef">
-        <el-form-item label="名称" prop="Name">
-          <el-input v-model="sourceForm.Name" placeholder="请输入订阅源名称" />
+        <el-form-item label="名称" prop="name">
+          <el-input v-model="sourceForm.name" placeholder="请输入订阅源名称" />
         </el-form-item>
-        <el-form-item label="订阅链接" prop="URL">
-          <el-input v-model="sourceForm.URL" placeholder="请输入订阅链接" />
+        <el-form-item label="订阅链接" prop="url">
+          <el-input v-model="sourceForm.url" placeholder="请输入订阅链接" />
         </el-form-item>
-        <el-form-item label="节点标签" prop="NodeTag">
-          <el-input v-model="sourceForm.NodeTag" placeholder="可选，用于标识节点来源" />
+        <el-form-item label="节点标签" prop="node_tag">
+          <el-input v-model="sourceForm.node_tag" placeholder="可选，用于标识节点来源" />
           <div style="color: #909399; font-size: 12px; margin-top: 5px;">
             留空则使用订阅源名称作为标签
           </div>
         </el-form-item>
-        <el-form-item label="同步模式" prop="SyncMode">
-          <el-select v-model="sourceForm.SyncMode" placeholder="请选择同步模式">
+        <el-form-item label="同步模式" prop="sync_mode">
+          <el-select v-model="sourceForm.sync_mode" placeholder="请选择同步模式">
             <el-option label="追加模式" value="append">
               <div>
                 <div>追加模式</div>
@@ -98,11 +98,11 @@
           </el-select>
         </el-form-item>
         <el-form-item label="更新间隔">
-          <el-input-number v-model="sourceForm.UpdateInterval" :min="1" :max="168" />
+          <el-input-number v-model="sourceForm.update_interval" :min="1" :max="168" />
           <span style="margin-left: 8px;">小时</span>
         </el-form-item>
         <el-form-item label="启用状态">
-          <el-switch v-model="sourceForm.Enabled" />
+          <el-switch v-model="sourceForm.enabled" />
         </el-form-item>
         <el-form-item>
           <el-button @click="handleTest" :loading="testing">测试连接</el-button>
@@ -141,21 +141,21 @@ const testResult = ref(null)
 const sourceFormRef = ref(null)
 
 const sourceForm = ref({
-  Name: '',
-  URL: '',
-  Enabled: true,
-  UpdateInterval: 24,
-  NodeTag: '',
-  SyncMode: 'append'
+  name: '',
+  url: '',
+  enabled: true,
+  update_interval: 24,
+  node_tag: '',
+  sync_mode: 'append'
 })
 
 const formRules = {
-  Name: [{ required: true, message: '请输入订阅源名称', trigger: 'blur' }],
-  URL: [
+  name: [{ required: true, message: '请输入订阅源名称', trigger: 'blur' }],
+  url: [
     { required: true, message: '请输入订阅链接', trigger: 'blur' },
     { type: 'url', message: '请输入有效的URL', trigger: 'blur' }
   ],
-  SyncMode: [{ required: true, message: '请选择同步模式', trigger: 'change' }]
+  sync_mode: [{ required: true, message: '请选择同步模式', trigger: 'change' }]
 }
 
 const loadSources = async () => {
@@ -197,33 +197,33 @@ const showCreateDialog = () => {
   editId.value = null
   testResult.value = null
   sourceForm.value = {
-    Name: '',
-    URL: '',
-    Enabled: true,
-    UpdateInterval: 24,
-    NodeTag: '',
-    SyncMode: 'append'
+    name: '',
+    url: '',
+    enabled: true,
+    update_interval: 24,
+    node_tag: '',
+    sync_mode: 'append'
   }
   formDialogVisible.value = true
 }
 
 const handleEdit = (row) => {
   isEdit.value = true
-  editId.value = row.ID
+  editId.value = row.id
   testResult.value = null
   sourceForm.value = {
-    Name: row.Name,
-    URL: row.URL,
-    Enabled: row.Enabled,
-    UpdateInterval: row.UpdateInterval,
-    NodeTag: row.NodeTag || '',
-    SyncMode: row.SyncMode || 'append'
+    name: row.name,
+    url: row.url,
+    enabled: row.enabled,
+    update_interval: row.update_interval,
+    node_tag: row.node_tag || '',
+    sync_mode: row.sync_mode || 'append'
   }
   formDialogVisible.value = true
 }
 
 const handleTest = async () => {
-  if (!sourceForm.value.URL) {
+  if (!sourceForm.value.url) {
     ElMessage.warning('请先输入订阅链接')
     return
   }
@@ -231,7 +231,7 @@ const handleTest = async () => {
   testing.value = true
   testResult.value = null
   try {
-    const result = await testSource(sourceForm.value.URL)
+    const result = await testSource(sourceForm.value.url)
     testResult.value = result
     if (result.success) {
       ElMessage.success(`测试成功！发现 ${result.nodesCount} 个节点`)
@@ -255,12 +255,12 @@ const handleSave = async () => {
   saving.value = true
   try {
     const data = {
-      Name: sourceForm.value.Name,
-      URL: sourceForm.value.URL,
-      Enabled: sourceForm.value.Enabled,
-      UpdateInterval: sourceForm.value.UpdateInterval,
-      NodeTag: sourceForm.value.NodeTag,
-      SyncMode: sourceForm.value.SyncMode
+      name: sourceForm.value.name,
+      url: sourceForm.value.url,
+      enabled: sourceForm.value.enabled,
+      update_interval: sourceForm.value.update_interval,
+      node_tag: sourceForm.value.node_tag,
+      sync_mode: sourceForm.value.sync_mode
     }
 
     if (isEdit.value) {
@@ -279,31 +279,31 @@ const handleSave = async () => {
 
 const handleToggleEnabled = async (row) => {
   try {
-    await updateSource(row.ID, {
-      Name: row.Name,
-      URL: row.URL,
-      Enabled: row.Enabled,
-      UpdateInterval: row.UpdateInterval,
-      NodeTag: row.NodeTag,
-      SyncMode: row.SyncMode
+    await updateSource(row.id, {
+      name: row.name,
+      url: row.url,
+      enabled: row.enabled,
+      update_interval: row.update_interval,
+      node_tag: row.node_tag,
+      sync_mode: row.sync_mode
     })
-    ElMessage.success(row.Enabled ? '已启用' : '已禁用')
+    ElMessage.success(row.enabled ? '已启用' : '已禁用')
   } catch (error) {
-    row.Enabled = !row.Enabled
+    row.enabled = !row.enabled
     ElMessage.error('操作失败')
   }
 }
 
 const handleSync = async (row) => {
   await ElMessageBox.confirm(
-    `确定要同步订阅源「${row.Name}」吗？\n\n同步模式：${getSyncModeText(row.SyncMode)}`,
+    `确定要同步订阅源「${row.name}」吗？\n\n同步模式：${getSyncModeText(row.sync_mode)}`,
     '确认同步',
     { type: 'warning' }
   )
 
-  syncingId.value = row.ID
+  syncingId.value = row.id
   try {
-    const result = await syncSource(row.ID)
+    const result = await syncSource(row.id)
     ElMessage.success(`同步成功！共 ${result.nodesCount} 个节点`)
     loadSources()
   } catch (error) {
@@ -314,8 +314,8 @@ const handleSync = async (row) => {
 }
 
 const handleDelete = async (row) => {
-  await ElMessageBox.confirm(`确定删除订阅源「${row.Name}」吗？`, '提示', { type: 'warning' })
-  await deleteSource(row.ID)
+  await ElMessageBox.confirm(`确定删除订阅源「${row.name}」吗？`, '提示', { type: 'warning' })
+  await deleteSource(row.id)
   ElMessage.success('删除成功')
   loadSources()
 }
