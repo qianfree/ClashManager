@@ -116,7 +116,7 @@ docker build -t clash-manager:latest .
 ``` shell
 docker run -d \
   --name clash-manager \
-  -p 2027:8080 \
+  -p 2027:8090 \
   -v $(pwd)/data:/app/data \
   --restart unless-stopped \
   clash-manager:latest
