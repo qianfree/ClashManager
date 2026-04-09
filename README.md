@@ -96,7 +96,33 @@ chmod +x clash-manager
 ./clash-manager
 ```
 
-#### 方式二：从源码运行
+#### 方式二：使用docker运行
+
+1.首次启动需要克隆项目并构建镜像
+```shell
+# 创建项目存放目录
+cd ~ && mkdir -p ClashManager-Code && cd ClashManager-Code
+
+# 克隆项目
+git clone https://github.com/qianfree/ClashManager.git
+
+# 进入项目目录
+cd ClashManager
+
+# 构建镜像
+docker build -t clash-manager:latest .
+```
+2.运行容器，2027为宿主机端口，也可以自定义更改
+``` shell
+docker run -d \
+  --name clash-manager \
+  -p 2027:8080 \
+  -v $(pwd)/data:/app/data \
+  --restart unless-stopped \
+  clash-manager:latest
+```
+
+#### 方式三：从源码运行
 
 **1. 克隆仓库**
 ```bash
@@ -125,7 +151,7 @@ npm run dev
 npm run build
 ```
 
-#### 方式三：打包部署
+#### 方式四：打包部署
 
 ```bash
 # 构建前端
